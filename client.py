@@ -13,7 +13,7 @@ class Client:
         path = os.path.expanduser(file)
         pass
 
-    def on_send_text(self):  # TODO: Send text
+    def on_send_text(self):
         if self.box_protocol.get() == "TCP":
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((self.box_ip.get(), self.port))
@@ -21,7 +21,8 @@ class Client:
             sock.close()
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            pass
+            sock.sendto(self.box_user_1.get("1.0", END).encode(), (self.box_ip.get(), self.port))
+            sock.close()
 
     def gui(self):
         # self.img_bg = Label(root, image=PhotoImage(file="img\\bg.gif"))

@@ -15,8 +15,15 @@ class TCP(threading.Thread):
         conn.close()
 
 class UDP(threading.Thread):
-    def run(self):  # TODO: Receive file and text
-        pass
+    def run(self):  # TODO: Receive file
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(("0.0.0.0", 8888))
+
+        while 1:
+            data, addr = sock.recvfrom(1024)
+            if data:
+                # sock.sendto(data, addr)
+                pass
 
 if __name__ == "__main__":
     TCP().start()
