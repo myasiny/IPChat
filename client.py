@@ -9,7 +9,7 @@ class Client:
         self.port_text = port_text
         self.port_file = port_file
 
-    def on_send_file(self):  # TODO: Send file over UDP
+    def on_send_file(self):
         file = askopenfilename(parent=root)
         path = os.path.expanduser(file)
 
@@ -26,7 +26,16 @@ class Client:
             file.close()
             sock.close()
         else:
-            pass
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.sendto(path.split(".")[-1].encode(), (self.box_ip.get(), self.port_file))
+            file = open(path, "rb")
+            while 1:
+                chunk = file.read(1024)
+                if not chunk:
+                    break
+                sock.sendto(chunk, (self.box_ip.get(), self.port_file))
+            file.close()
+            sock.close()
 
     def on_send_text(self):
         if self.box_protocol.get() == "TCP":

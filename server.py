@@ -60,7 +60,24 @@ class UDP_File(threading.Thread):
 
     @staticmethod
     def file():
-        pass
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(("0.0.0.0", 8888))
+
+        while 1:
+            try:
+                data, addr = sock.recvfrom(1024)
+                if data:
+                    file = open("recv/from_%s.%s" % (addr[0].replace(".", "-"), data.decode("utf-8")), "wb")
+                    while 1:
+                        try:
+                            sock.settimeout(2)
+                            chunk, addr = sock.recvfrom(1024)
+                            file.write(chunk)
+                        except:
+                            break
+                    file.close()
+            except:
+                pass
 
 if __name__ == "__main__":
     TCP_Text().start()
