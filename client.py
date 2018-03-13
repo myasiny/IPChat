@@ -5,28 +5,47 @@ from tkinter.filedialog import *
 root = Tk()
 
 class Client:
-    def __init__(self, port):
-        self.port = port
+    def __init__(self, port_text, port_file):
+        self.port_text = port_text
+        self.port_file = port_file
 
-    def on_send_file(self):  # TODO: Send file
+    def on_send_file(self):  # TODO: Send file over UDP
         file = askopenfilename(parent=root)
         path = os.path.expanduser(file)
-        pass
+
+        if self.box_protocol.get() == "TCP":
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((self.box_ip.get(), self.port_file))
+            sock.sendall(path.split(".")[-1].encode())
+            file = open(path, "rb")
+            while 1:
+                chunk = file.read(1024)
+                if not chunk:
+                    break
+                sock.sendall(chunk)
+            file.close()
+            sock.close()
+        else:
+            pass
 
     def on_send_text(self):
         if self.box_protocol.get() == "TCP":
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.box_ip.get(), self.port))
+            sock.connect((self.box_ip.get(), self.port_text))
             sock.sendall(self.box_user_1.get("1.0", END).encode())
             sock.close()
+
+            self.box_user_1.delete("1.0", END)
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.sendto(self.box_user_1.get("1.0", END).encode(), (self.box_ip.get(), self.port))
+            sock.sendto(self.box_user_1.get("1.0", END).encode(), (self.box_ip.get(), self.port_text))
             sock.close()
 
+            self.box_user_1.delete("1.0", END)
+
     def gui(self):
-        # self.img_bg = Label(root, image=PhotoImage(file="img\\bg.gif"))
-        # self.img_bg.place(x=0, y=0, relwidth=1, relheight=1)
+        # img_bg = Label(root, image=PhotoImage(file="img\\bg.gif"))
+        # img_bg.place(x=0, y=0, relwidth=1, relheight=1)
 
         top_menu = Menu(root)
         top_menu.add_command(label="Send File", command=self.on_send_file)
@@ -68,7 +87,7 @@ class Client:
         btn_send.place(relx=0.5, rely=0.95, anchor=CENTER)
 
 if __name__ == '__main__':
-    Client(8888).gui()
+    Client(8887, 8888).gui()
     root.wm_title("IPChat")
     root.geometry("500x750+500+25")
     root.iconbitmap("img\\icon.ico")

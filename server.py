@@ -1,9 +1,13 @@
 import socket, threading
 
-class TCP(threading.Thread):
-    def run(self):  # TODO: Receive file
+class TCP_Text(threading.Thread):
+    def run(self):
+        self.text()
+
+    @staticmethod
+    def text():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(("0.0.0.0", 8888))
+        sock.bind(("0.0.0.0", 8887))
         sock.listen(2)
 
         while 1:
@@ -12,12 +16,15 @@ class TCP(threading.Thread):
             if data:
                 # conn.sendall(data.encode())
                 pass
-        conn.close()
 
-class UDP(threading.Thread):
-    def run(self):  # TODO: Receive file
+class UDP_Text(threading.Thread):
+    def run(self):
+        self.text()
+
+    @staticmethod
+    def text():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(("0.0.0.0", 8888))
+        sock.bind(("0.0.0.0", 8887))
 
         while 1:
             data, addr = sock.recvfrom(1024)
@@ -25,6 +32,38 @@ class UDP(threading.Thread):
                 # sock.sendto(data, addr)
                 pass
 
+class TCP_File(threading.Thread):
+    def run(self):
+        self.file()
+
+    @staticmethod
+    def file():
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("0.0.0.0", 8888))
+        sock.listen(2)
+
+        while 1:
+            conn, addr = sock.accept()
+            data = conn.recv(1024).decode()
+            if data:
+                file = open("recv/from_%s.%s" % (addr[0].replace(".", "-"), data), "wb")
+                while 1:
+                    try:
+                        file.write(conn.recv(1024))
+                    except:
+                        break
+                file.close()
+
+class UDP_File(threading.Thread):
+    def run(self):  # TODO: Receive file
+        self.file()
+
+    @staticmethod
+    def file():
+        pass
+
 if __name__ == "__main__":
-    TCP().start()
-    UDP().start()
+    TCP_Text().start()
+    UDP_Text().start()
+    TCP_File().start()
+    UDP_File().start()
