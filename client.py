@@ -9,48 +9,53 @@ class Client:
         self.port_text = port_text
         self.port_file = port_file
 
+    def on_add_emoji(self):
+        self.box_user_1.insert(END, self.var_emoji.get())
+
     def on_send_file(self):
         file = askopenfilename(parent=root)
         path = os.path.expanduser(file)
 
-        if self.box_protocol.get() == "TCP":
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.box_ip.get(), self.port_file))
-            sock.sendall(path.split(".")[-1].encode())
-            file = open(path, "rb")
-            while 1:
-                chunk = file.read(1024)
-                if not chunk:
-                    break
-                sock.sendall(chunk)
-            file.close()
-            sock.close()
-        else:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.sendto(path.split(".")[-1].encode(), (self.box_ip.get(), self.port_file))
-            file = open(path, "rb")
-            while 1:
-                chunk = file.read(1024)
-                if not chunk:
-                    break
-                sock.sendto(chunk, (self.box_ip.get(), self.port_file))
-            file.close()
-            sock.close()
+        if path:
+            if self.box_protocol.get() == "TCP":
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((self.box_ip.get(), self.port_file))
+                sock.sendall(path.split(".")[-1].encode())
+                file = open(path, "rb")
+                while 1:
+                    chunk = file.read(1024)
+                    if not chunk:
+                        break
+                    sock.sendall(chunk)
+                file.close()
+                sock.close()
+            else:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.sendto(path.split(".")[-1].encode(), (self.box_ip.get(), self.port_file))
+                file = open(path, "rb")
+                while 1:
+                    chunk = file.read(1024)
+                    if not chunk:
+                        break
+                    sock.sendto(chunk, (self.box_ip.get(), self.port_file))
+                file.close()
+                sock.close()
 
     def on_send_text(self):
-        if self.box_protocol.get() == "TCP":
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.box_ip.get(), self.port_text))
-            sock.sendall(self.box_user_1.get("1.0", END).encode())
-            sock.close()
+        if self.box_user_1.get("1.0", END).strip():
+            if self.box_protocol.get() == "TCP":
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((self.box_ip.get(), self.port_text))
+                sock.sendall(self.box_user_1.get("1.0", END).encode())
+                sock.close()
 
-            self.box_user_1.delete("1.0", END)
-        else:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.sendto(self.box_user_1.get("1.0", END).encode(), (self.box_ip.get(), self.port_text))
-            sock.close()
+                self.box_user_1.delete("1.0", END)
+            else:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.sendto(self.box_user_1.get("1.0", END).encode(), (self.box_ip.get(), self.port_text))
+                sock.close()
 
-            self.box_user_1.delete("1.0", END)
+                self.box_user_1.delete("1.0", END)
 
     def gui(self):
         # img_bg = Label(root, image=PhotoImage(file="img\\bg.gif"))
@@ -87,10 +92,19 @@ class Client:
         self.box_protocol = Spinbox(root, values=("TCP", "UDP"))
         self.box_protocol.place(relx=0.55, rely=0.9, anchor=CENTER)
 
-        var_emoji = StringVar(root)
-        var_emoji.set("Emoji")
-        box_emoji = OptionMenu(root, var_emoji, "\u2764")  # TODO: Emojis
-        box_emoji.place(relx=0.8, rely=0.9, anchor=CENTER)
+        # TODO: Only U+0000 - U+FFFF range is allowed by Tcl
+        # Emoji unicode table: https://apps.timwhitlock.info/emoji/tables/unicode
+        # Emoji unicode to js: https://r12a.github.io/app-conversion/
+        self.var_emoji = StringVar(root)
+        self.var_emoji.set("\uD83D\uDE03")
+        box_emoji = OptionMenu(root, self.var_emoji,
+                               "\uD83D\uDE03",
+                               "\uD83D\uDE09",
+                               "\uD83D\uDE0D")
+        box_emoji.place(relx=0.775, rely=0.9, anchor=CENTER)
+
+        btn_emoji = Button(root, text="+", width=2, command=self.on_add_emoji)
+        btn_emoji.place(relx=0.875, rely=0.9, anchor=CENTER)
 
         btn_send = Button(root, text="SEND", width=50, command=self.on_send_text)
         btn_send.place(relx=0.5, rely=0.95, anchor=CENTER)

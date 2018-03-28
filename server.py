@@ -55,7 +55,7 @@ class TCP_File(threading.Thread):
                 file.close()
 
 class UDP_File(threading.Thread):
-    def run(self):  # TODO: Receive file
+    def run(self):
         self.file()
 
     @staticmethod
