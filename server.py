@@ -12,9 +12,10 @@ class TCP_Text(threading.Thread):
 
         while 1:
             conn, addr = sock.accept()
-            data = conn.recv(1024).decode()
+            data = conn.recv(1024).decode("utf-16")
             if data:
                 # conn.sendall(data.encode())
+                print("{sender} (TCP) sent a message:\n{msg}".format(sender=addr[0], msg=data))
                 pass
 
 class UDP_Text(threading.Thread):
@@ -30,6 +31,7 @@ class UDP_Text(threading.Thread):
             data, addr = sock.recvfrom(1024)
             if data:
                 # sock.sendto(data, addr)
+                print("{sender} (UDP) sent a message:\n{msg}".format(sender=addr[0], msg=data.decode("utf-16")))
                 pass
 
 class TCP_File(threading.Thread):
@@ -44,7 +46,7 @@ class TCP_File(threading.Thread):
 
         while 1:
             conn, addr = sock.accept()
-            data = conn.recv(1024).decode()
+            data = conn.recv(1024).decode("utf-16")
             if data:
                 file = open("recv/from_%s.%s" % (addr[0].replace(".", "-"), data), "wb")
                 while 1:
@@ -52,6 +54,7 @@ class TCP_File(threading.Thread):
                         file.write(conn.recv(1024))
                     except:
                         break
+                print("{sender} (TCP) sent a file: ...{msg}".format(sender=addr[0], msg=data))
                 file.close()
 
 class UDP_File(threading.Thread):
@@ -62,25 +65,25 @@ class UDP_File(threading.Thread):
     def file():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(("0.0.0.0", 8888))
+        sock.settimeout(2)
 
         while 1:
             try:
                 data, addr = sock.recvfrom(1024)
                 if data:
-                    file = open("recv/from_%s.%s" % (addr[0].replace(".", "-"), data.decode("utf-8")), "wb")
+                    file = open("recv/from_%s.%s" % (addr[0].replace(".", "-"), data.decode("utf-16")), "wb")
                     while 1:
                         try:
-                            sock.settimeout(2)
                             chunk, addr = sock.recvfrom(1024)
                             file.write(chunk)
                         except:
                             break
+                    print("{sender} (UDP) sent a file: ...{msg}".format(sender=addr[0], msg=data.decode("utf-16")))
                     file.close()
             except:
                 pass
 
 if __name__ == "__main__":
-    TCP_Text().start()
-    UDP_Text().start()
-    TCP_File().start()
-    UDP_File().start()
+    server = [TCP_Text(), TCP_File(), UDP_Text(), UDP_File()]
+    for thread in server:
+        thread.start()
